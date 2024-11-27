@@ -57,5 +57,6 @@ export function calRisk(partner1 = false, act = 'insertive_vaginal_sex', PrEP = 
     }
 
     const risk = actions[act] * total_protect * risk_factor_all;
-    return risk * 10000;
+    const roundedRisk = Math.round(risk * 10000);
+    return roundedRisk;
 }
