@@ -4,6 +4,10 @@ export function calRisk(partner1 = false, act = 'insertive_vaginal_sex', PrEP = 
             act = 'insertive_anal_sex';
         } else if (act === 'receptive_vaginal_sex') {
             act = 'insertive_vaginal_sex';
+        } else if (act === 'insertive_vaginal_sex') {
+            act = 'receptive_vaginal_sex';
+        } else if (act === 'insertive_anal_sex') {
+            act = 'receptive_anal_sex';
         }
     }
 
