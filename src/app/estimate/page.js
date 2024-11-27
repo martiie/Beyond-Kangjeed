@@ -1,6 +1,7 @@
 'use client';
 import { useState } from 'react';
-import { calRisk } from './CalRisk';
+import { calRisk } from './calRisk';
+import '../../styles/cal_risk.css'
 
 const EstimatePage = () => {
   const [formData, setFormData] = useState({
@@ -14,13 +15,13 @@ const EstimatePage = () => {
     std_infection_hiv_positive_partner: false,
   });
 
-  const [risk, setRisk] = useState(null);
+  const [risk, setRisk] = useState(0);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     setFormData({
       ...formData,
-      [name]: type === 'checkbox' ? checked : value,
+      [name]: type === 'checkbox' ? checked : name === 'partner1' ? JSON.parse(value) : value,
     });
   };
 
@@ -40,18 +41,39 @@ const EstimatePage = () => {
   };
 
   return (
-    <div className="bg-white p-6 rounded-lg shadow-lg max-w-3xl mx-auto">
+    <div className='box'>
+    <div className="bg-white p-6 rounded-lg shadow-lg max-w-3xl mx-auto contrainer-cal">
       <h1 className="text-3xl font-bold text-center text-gray-800 mb-6">Risk Estimation</h1>
+      <hr className="divider" />
+      {risk !== null && <p className="mt-6 text-center font-bold text-gray-800">Calculated Risk: {risk}</p>}
+      <div className="risk-bar-container">
+      <span className="label-left">ความเสี่ยงต่ำ</span>
+      <div className="risk-bar"></div>
+      <span className="label-right">ความเสี่ยงสูง</span>
+      </div>
+      <hr className="divider" />
       <form className="space-y-6" onSubmit={handleSubmit}>
         <div className="flex items-center space-x-4">
-          <label className="text-gray-700">Partner 1 (True/False):</label>
+          <label className="text-gray-700">Partner</label>
           <input
-            type="checkbox"
+            type="radio"
             name="partner1"
-            checked={formData.partner1}
+            value="true"
+            checked={formData.partner1 === true}
             onChange={handleChange}
             className="h-5 w-5"
           />
+          <span className='text-m'>บวก</span>
+          <input
+            type="radio"
+            name="partner1"
+            value="false"
+            checked={formData.partner1 === false}
+            onChange={handleChange}
+            className="h-5 w-5"
+          />
+          <span className='text-m'>ลบ</span>
+          
         </div>
 
         <div className="space-y-4">
@@ -142,8 +164,7 @@ const EstimatePage = () => {
           Calculate Risk
         </button>
       </form>
-
-      {risk !== null && <p className="mt-6 text-center text-xl font-semibold text-gray-800">Calculated Risk: {risk}</p>}
+    </div>
     </div>
   );
 };
