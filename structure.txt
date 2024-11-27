@@ -1,0 +1,18 @@
+kangjeed/
+├── src/
+│   ├── app/                    
+│   │   ├── layout.js        
+│   │   ├── page.js
+│   ├── styles/ 
+│   │   ├── globals.css
+│   ├── fornt/      
+├── public/                       
+├── .eslintrc.json     
+├── jsconfig.json
+├── next.config.mjs
+├── package-lock.json
+├── package.json   
+├── ppstcss.config.mjs
+├── tailwind.config.js
+├── README.md 
+└── next.config.js      
