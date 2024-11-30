@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect } from 'react'
 import '../styles/calRisk.css'
 
 const activityPairs = {
@@ -19,9 +19,9 @@ const checkboxOptions = [
   { name: 'std_infection_hiv_positive_partner', label: 'การติดเชื้อโรคติดต่อทางเพศสัมพันธ์ (มีเชื้อ HIV)', category: 'ปัจจัยเสี่ยง' }
 ]
 
-export function RiskEstimationBox({ onCalRiskDataChange }) {
+export function RiskEstimationBox() {
   const [formData, setFormData] = useState({
-    partner1: true,
+    partner1: false,
     act1: 'insertive_vaginal_sex',
     act2: 'receptive_vaginal_sex',
     PrEP: false,
@@ -31,38 +31,6 @@ export function RiskEstimationBox({ onCalRiskDataChange }) {
     std_infection_hiv_negative_partner: false,
     std_infection_hiv_positive_partner: false,
   })
-
-  const updateCalRiskData = useCallback(() => {
-    const newCalRiskData = [
-      {
-        partner: !formData.partner1,
-        act: formData.act1,
-        PrEP: formData.PrEP,
-        prot: formData.prot,
-        ART_UVL: formData.ART_UVL,
-        acute_hiv_infection_hiv_positive_partner: formData.acute_hiv_infection_hiv_positive_partner,
-        std_infection_hiv_negative_partner: formData.std_infection_hiv_negative_partner,
-        std_infection_hiv_positive_partner: formData.std_infection_hiv_positive_partner
-      }
-    ]
-    onCalRiskDataChange(newCalRiskData)
-  }, [formData, onCalRiskDataChange])
-
-  useEffect(() => {
-    updateCalRiskData()
-  }, [updateCalRiskData])
-
-  useEffect(() => {
-    setFormData(prev => ({
-      ...prev,
-      PrEP: false,
-      prot: false,
-      ART_UVL: false,
-      acute_hiv_infection_hiv_positive_partner: false,
-      std_infection_hiv_negative_partner: false,
-      std_infection_hiv_positive_partner: false,
-    }))
-  }, [formData.partner1, formData.act1, formData.act2])
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target
@@ -142,6 +110,23 @@ export function RiskEstimationBox({ onCalRiskDataChange }) {
     return enabledCheckboxes
   }
 
+  useEffect(() => {
+    setFormData(prev => ({
+      ...prev,
+      PrEP: false,
+      prot: false,
+      ART_UVL: false,
+      acute_hiv_infection_hiv_positive_partner: false,
+      std_infection_hiv_negative_partner: false,
+      std_infection_hiv_positive_partner: false,
+    }))
+  }, [formData.partner1, formData.act1, formData.act2])
+
+  const handleSubmit = (e) => {
+    e.preventDefault()
+    // Implement your risk calculation logic here
+  }
+
   const renderPartnerForm = (isPartner1) => {
     const partnerNumber = isPartner1 ? '1' : '2'
     const activityName = isPartner1 ? 'act1' : 'act2'
@@ -151,7 +136,7 @@ export function RiskEstimationBox({ onCalRiskDataChange }) {
       <div className="bg-white p-4 sm:p-6 md:p-10 rounded-lg shadow-lg w-full">
         <h2 className="text-2xl sm:text-3xl font-extrabold text-center text-gray-800">Partner {partnerNumber}</h2>
         <hr className="divider" />
-        <form className="space-y-4 sm:space-y-6">
+        <form className="space-y-4 sm:space-y-6" onSubmit={handleSubmit}>
           <div className="flex flex-wrap items-center space-x-2 sm:space-x-4">
             <label className="text-gray-700 font-bold mb-2 sm:mb-0 text-lg">สถานะ HIV</label>
             <div className="flex items-center space-x-2">
