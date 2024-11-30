@@ -1,6 +1,6 @@
 
 export async function fetchGPTResponse(userMessage) {
-    const apiKey = ' '; // แทนที่ด้วย API Key ที่คุณสร้างใหม่จาก OpenAI
+    const apiKey = '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'; // แทนที่ด้วย API Key ที่คุณสร้างใหม่จาก OpenAI
  
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
