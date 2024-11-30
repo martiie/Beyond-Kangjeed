@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useCallback } from 'react'
-import { RiskEstimationBox } from '@/components/risk-estimation-box'
+import { RiskEstimationBox } from '../../components/risk-estimation-box'
 import { calRisk } from './calRisk'
 
 export default function EstimatePage() {

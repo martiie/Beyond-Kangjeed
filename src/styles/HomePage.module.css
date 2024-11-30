@@ -1,0 +1,229 @@
+.container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-height: 100vh;
+  background-size: cover;
+  background-position: center;
+}
+
+.overlay {
+  position: absolute;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.45);
+  z-index: 0;
+}
+
+.nav {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 2rem;
+  color: white;
+  background-color: transparent;
+  z-index: 10;
+  margin-top: 0.5rem;
+}
+
+.navTitle {
+  font-size: 2.25rem;
+  font-weight: 300;
+}
+
+.desktopMenu {
+  display: flex;
+  gap: 2.5rem;
+}
+
+.navLink {
+  font-weight: 800;
+  font-size: 1.125rem;
+  color: white;
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+
+.navLink:hover {
+  color: #f3f4f6;
+}
+
+.hamburger {
+  display: none;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  z-index: 11;
+  color: white;
+}
+
+.mobileMenu {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.9);
+  z-index: 1000;
+}
+
+.mobileMenuContent {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 2rem;
+  padding: 2rem;
+}
+
+.mainContent {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: flex-start;
+  padding: 0 2rem;
+  z-index: 1;
+  color: white;
+}
+
+.title {
+  font-size: 2.25rem;
+  font-weight: bold;
+}
+
+.descriptionContainer {
+  max-width: 48rem;
+  margin-bottom: 2rem;
+  width: 55%;
+}
+
+.description {
+  font-size: 1rem;
+  line-height: 1.75;
+  font-weight: 400;
+  color: white;
+  max-width: 100%;
+  word-wrap: break-word;
+}
+
+.buttons {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.estimateButton {
+  padding: 0.75rem 2rem;
+  background-image: linear-gradient(to right, #ec4899, #3b82f6, #8b5cf6);
+  color: white;
+  font-size: 1.125rem;
+  font-weight: 600;
+  border-radius: 9999px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  transition: all 0.5s ease-in-out;
+}
+
+.estimateButton:hover {
+  transform: scale(1.05);
+  background-image: linear-gradient(to left, #8b5cf6, #eab308, #ef4444);
+}
+
+.chatbotButton {
+  position: relative;
+  padding: 1.5rem 5rem;
+  font-weight: 600;
+  font-size: 1.125rem;
+  border-radius: 9999px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  transition: transform 0.5s;
+  background-color: transparent;
+}
+
+.chatbotButton:hover {
+  transform: scale(1.05);
+}
+
+.chatbotButtonBorder {
+  position: absolute;
+  inset: 0;
+  background-image: linear-gradient(to right, #ef4444, #eab308, #22c55e);
+  border-radius: 9999px;
+  padding: 4px;
+  animation: move-border 3s linear infinite;
+}
+
+.chatbotButtonContent {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  width: 100%;
+  background-color: #f3f4f6;
+  border-radius: 9999px;
+  color: #000000;
+  font-size: 0.95rem;
+}
+
+@media (max-width: 768px) {
+  .nav {
+    padding: 1rem;
+  }
+
+  .desktopMenu {
+    display: none;
+  }
+
+  .hamburger {
+    display: block;
+  }
+
+  .mobileMenu {
+    display: flex;
+  }
+
+  .mainContent {
+    align-items: center;
+    text-align: center;
+    padding: 0 1rem;
+  }
+
+  .title {
+    font-size: 1.875rem;
+  }
+
+  .description {
+    font-size: 0.875rem;
+  }
+
+  .descriptionContainer {
+    padding: 1rem;
+    max-width: 90%;
+    width: 100%;
+  }
+
+  .navTitle {
+    font-size: 1.5rem;
+  }
+
+  .navLink {
+    font-size: 1rem;
+  }
+
+  .buttons {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .estimateButton, .chatbotButton {
+    width: 100%;
+    max-width: 300px;
+  }
+}
+
