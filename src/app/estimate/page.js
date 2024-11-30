@@ -16,7 +16,7 @@ export default function EstimatePage() {
     if (calRiskData.length > 0) {
       const data = calRiskData[0];
       const risk = calRisk(
-        !data.partner,
+        data.partner,
         data.act,
         data.PrEP,
         data.prot,
