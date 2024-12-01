@@ -9,7 +9,7 @@
 !.yarn/plugins
 !.yarn/releases
 !.yarn/versions
-
+/src/app/chat-bot/api.js
 # testing
 /coverage
 

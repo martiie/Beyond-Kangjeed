@@ -15,8 +15,8 @@ const checkboxOptions = [
   { name: 'prot', label: 'สวมถุงยาง', category: 'ปัจจัยการป้องการ' },
   { name: 'ART_UVL', label: 'ART + UVL', category: 'ปัจจัยการป้องการ' },
   { name: 'acute_hiv_infection_hiv_positive_partner', label: 'การติดเชื้อ HIV เฉียบพลันในคู่ที่มีเชื้อ HIV', category: 'ปัจจัยเสี่ยง' },
-  { name: 'std_infection_hiv_negative_partner', label: 'การติดเชื้อโรคติดต่อทางเพศสัมพันธ์ (ไม่มีเชื้อ HIV)', category: 'ปัจจัยเสี่ยง' },
-  { name: 'std_infection_hiv_positive_partner', label: 'การติดเชื้อโรคติดต่อทางเพศสัมพันธ์ (มีเชื้อ HIV)', category: 'ปัจจัยเสี่ยง' }
+  { name: 'std_infection_hiv_negative_partner', label: 'การติดเชื้อโรคติดต่อทางเพศสัมพันธ์', category: 'ปัจจัยเสี่ยง' },
+  { name: 'std_infection_hiv_positive_partner', label: 'การติดเชื้อโรคติดต่อทางเพศสัมพันธ์', category: 'ปัจจัยเสี่ยง' }
 ]
 
 export function RiskEstimationBox({ onCalRiskDataChange }) {
