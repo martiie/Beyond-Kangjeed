@@ -21,7 +21,7 @@ const checkboxOptions = [
 
 export function RiskEstimationBox({ onCalRiskDataChange }) {
   const [formData, setFormData] = useState({
-    partner1: true,
+    partner1: false,
     act1: 'insertive_vaginal_sex',
     act2: 'receptive_vaginal_sex',
     PrEP: false,
@@ -35,7 +35,7 @@ export function RiskEstimationBox({ onCalRiskDataChange }) {
   const updateCalRiskData = useCallback(() => {
     const newCalRiskData = [
       {
-        partner: !formData.partner1,
+        partner: formData.partner1,
         act: formData.act1,
         PrEP: formData.PrEP,
         prot: formData.prot,
@@ -69,9 +69,9 @@ export function RiskEstimationBox({ onCalRiskDataChange }) {
 
     if (name === 'act1' || name === 'act2') {
       const otherAct = name === 'act1' ? 'act2' : 'act1'
-      const newValue = value === 'receptive_anal_sex' ? 'insertive_anal_sex' : 
-                       value === 'insertive_anal_sex' ? 'receptive_anal_sex' : 
-                       activityPairs[value]
+      const newValue = value === 'receptive_anal_sex' ? 'insertive_anal_sex' :
+        value === 'insertive_anal_sex' ? 'receptive_anal_sex' :
+          activityPairs[value]
       setFormData(prev => ({
         ...prev,
         [name]: value,
@@ -80,7 +80,10 @@ export function RiskEstimationBox({ onCalRiskDataChange }) {
     } else if (name === 'partner1') {
       setFormData(prev => ({
         ...prev,
-        [name]: JSON.parse(value)
+        [name]: JSON.parse(value),
+        // รีเซ็ต STD checkboxes เมื่อเปลี่ยนสถานะ HIV
+        std_infection_hiv_negative_partner: false,
+        std_infection_hiv_positive_partner: false
       }))
     } else if (type === 'checkbox') {
       const checkboxName = name.replace(/^partner[12]_/, '');
@@ -91,14 +94,14 @@ export function RiskEstimationBox({ onCalRiskDataChange }) {
             ...prev,
             [checkboxName]: checked
           };
-          
+
           // Reset conflicting checkbox
           if (checkboxName === 'ART_UVL' && checked) {
             newState.acute_hiv_infection_hiv_positive_partner = false;
           } else if (checkboxName === 'acute_hiv_infection_hiv_positive_partner' && checked) {
             newState.ART_UVL = false;
           }
-          
+
           return newState;
         });
       }
@@ -149,7 +152,13 @@ export function RiskEstimationBox({ onCalRiskDataChange }) {
 
     return (
       <div className="bg-white p-4 sm:p-6 md:p-10 rounded-lg shadow-lg w-full">
-        <h2 className="text-2xl sm:text-3xl font-extrabold text-center text-gray-800">Partner {partnerNumber}</h2>
+        {isPartner1 ? (
+          <h2 className="text-2xl sm:text-3xl font-extrabold text-center text-gray-800">คุณ</h2>
+        ) :
+          (
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-center text-gray-800">คู่นอนของคุณ</h2>
+          )
+        }
         <hr className="divider" />
         <form className="space-y-4 sm:space-y-6">
           <div className="flex flex-wrap items-center space-x-2 sm:space-x-4">
@@ -159,8 +168,8 @@ export function RiskEstimationBox({ onCalRiskDataChange }) {
                 type="radio"
                 id={`partner${partnerNumber}-negative`}
                 name={`partner${partnerNumber}`}
-                value="true"
-                checked={isPartner1 ? formData.partner1 : !formData.partner1}
+                value="false"
+                checked={isPartner1 ? !formData.partner1 : formData.partner1}
                 onChange={isPartner1 ? handleChange : undefined}
                 disabled={!isPartner1}
                 className="h-4 w-4 sm:h-5 sm:w-5"
@@ -172,8 +181,8 @@ export function RiskEstimationBox({ onCalRiskDataChange }) {
                 type="radio"
                 id={`partner${partnerNumber}-positive`}
                 name={`partner${partnerNumber}`}
-                value="false"
-                checked={isPartner1 ? !formData.partner1 : formData.partner1}
+                value="true"
+                checked={isPartner1 ? formData.partner1 : !formData.partner1}
                 onChange={isPartner1 ? handleChange : undefined}
                 disabled={!isPartner1}
                 className="h-4 w-4 sm:h-5 sm:w-5"
@@ -181,7 +190,7 @@ export function RiskEstimationBox({ onCalRiskDataChange }) {
               <label htmlFor={`partner${partnerNumber}-positive`} className="text-sm sm:text-base">มีเชื้อ</label>
             </div>
           </div>
-          
+
           <div className="space-y-2 sm:space-y-4">
             <label htmlFor={`activity-${partnerNumber}`} className="text-gray-700 font-bold block text-lg">กิจกรรม</label>
             <select
@@ -208,25 +217,29 @@ export function RiskEstimationBox({ onCalRiskDataChange }) {
                   .map(option => {
                     const isEnabled = enabledCheckboxes.includes(option.name);
                     const checkboxName = `partner${partnerNumber}_${option.name}`;
-                    return (
-                      <div key={option.name} className="flex items-center space-x-2 sm:space-x-4 mb-2">
-                        <input
-                          type="checkbox"
-                          id={checkboxName}
-                          name={checkboxName}
-                          checked={isEnabled ? formData[option.name] : false}
-                          onChange={handleChange}
-                          disabled={!isEnabled}
-                          className={`h-4 w-4 sm:h-5 sm:w-5 ${!isEnabled ? 'opacity-60 cursor-not-allowed' : ''}`}
-                        />
-                        <label 
-                          htmlFor={checkboxName}
-                          className={`text-sm sm:text-base text-gray-700 ${!isEnabled ? 'opacity-60' : ''}`}
-                        >
-                          {option.label}
-                        </label>
-                      </div>
-                    );
+                    // แสดงทุก checkbox ยกเว้น STD ที่ถูก disable
+                    if (isEnabled || (!option.name.includes('std_infection'))) {
+                      return (
+                        <div key={option.name} className="flex items-center space-x-2 sm:space-x-4 mb-2">
+                          <input
+                            type="checkbox"
+                            id={checkboxName}
+                            name={checkboxName}
+                            checked={isEnabled ? formData[option.name] : false}
+                            onChange={handleChange}
+                            disabled={!isEnabled}
+                            className={`h-4 w-4 sm:h-5 sm:w-5 ${!isEnabled ? 'opacity-60 cursor-not-allowed' : ''}`}
+                          />
+                          <label
+                            htmlFor={checkboxName}
+                            className={`text-sm sm:text-base text-gray-700 ${!isEnabled ? 'opacity-60' : ''}`}
+                          >
+                            {option.label}
+                          </label>
+                        </div>
+                      );
+                    }
+                    return null;
                   })}
               </div>
             ))}
@@ -243,3 +256,4 @@ export function RiskEstimationBox({ onCalRiskDataChange }) {
     </div>
   )
 }
+
