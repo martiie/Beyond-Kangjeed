@@ -1,8 +1,11 @@
 kangjeed/
 ├── src/
-│   ├── app/                    
+│   ├── app/ 
+|   |   |── chat-bot/
+|   |   |   |──api.js
+|   |   |   |──page.js                
 │   │   ├── layout.js        
-│   │   ├── page.js
+│   │   ├── page.jsป
 │   ├── styles/ 
 │   │   ├── globals.css
 │   ├── fornt/      

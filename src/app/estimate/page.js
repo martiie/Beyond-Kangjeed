@@ -5,7 +5,7 @@ import { RiskEstimationBox } from '../../components/risk-estimation-box';
 import { calRisk } from './calRisk';
 import Link from 'next/link';
 import styles from '../../styles/HomePage.module.css';
-import { Pacifico } from 'next/font/google';
+import { Pacifico } from '@next/font/google';
 
 // Load the Pacifico font
 const pacifico = Pacifico({
@@ -53,51 +53,18 @@ export default function EstimatePage() {
   }, [calRiskData]);
 
   return (
-    <div className="flex flex-col min-h-screen">
-      {/* Navigation Bar */}
-      <nav className={`${styles.nav}`}>
-        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <Link href="/">
-            <h1 className={`${styles.navTitle} ${pacifico.className} cursor-pointer text-black`}>
-              Love Foundation
-            </h1>
-          </Link>
-          <div className={styles.desktopMenu}>
-            <a href="#" className={`${styles.navLink} text-black`}>เกี่ยวกับเรา</a>
-            <a href="#" className={`${styles.navLink} text-black`}>ข่าวสาร</a>
-            <a href="#" className={`${styles.navLink} text-black`}>ติดต่อเรา</a>
-          </div>
-        </div>
-      </nav>
-      <main className="flex-grow container mx-auto px-4 py-4 relative pt-36">
-        {/* Risk Message */}
-        <div>
-          {riskMater ? (
-            <h1 className="text-4xl font-bold text-center mb-8">
-              โอกาสที่คู่นอนของคุณจะติดเชื้อจากคุณคือ... {calculatedRisk}
-            </h1>
-          ) : (
-            <h1 className="text-4xl font-bold text-center mb-8">
-              โอกาสที่คุณจะติดเชื้อจากคู่นอนของคุณคือ... {calculatedRisk}
-            </h1>
-          )}
-
-          {/* Risk Estimation Input Box */}
-          <RiskEstimationBox onCalRiskDataChange={handleCalRiskDataChange} />
-
-          {/* Calculate Risk Button */}
-          <button
-            className="fixed right-10 bottom-8 w-[5.2rem] h-[5.2rem] bg-green-600 text-white font-semibold rounded-full shadow-md hover:bg-green-700 transition duration-200 flex items-center justify-center"
-            onClick={calculateRisk}
-            aria-label="Calculate Risk"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-            </svg>
-          </button>
-        </div>
-      </main>
+    <div className="container mx-auto px-4 py-8 relative">
+      <RiskMeter calculatedRisk={calculatedRisk} />
+      <RiskEstimationBox onCalRiskDataChange={handleCalRiskDataChange} />
+      <button
+        className="fixed right-10 bottom-8 w-[5.2rem] h-[5.2rem] bg-green-600 text-white font-semibold rounded-full shadow-md hover:bg-green-700 transition duration-200 flex items-center justify-center"
+        onClick={calculateRisk}
+        aria-label="Calculate Risk"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+        </svg>
+      </button>
     </div>
-  );
+  )
 }
-
