@@ -3,16 +3,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import { RiskEstimationBox } from '../../components/risk-estimation-box';
 import { calRisk } from './calRisk';
-import Link from 'next/link';
-import styles from '../../styles/HomePage.module.css';
-import { Pacifico } from '@next/font/google';
-
-// Load the Pacifico font
-const pacifico = Pacifico({
-  subsets: ['latin'],
-  weight: '400',
-  display: 'swap',
-});
+import { RiskMeter } from '../../components/risk-mater';
 
 export default function EstimatePage() {
   const [calRiskData, setCalRiskData] = useState([]);
