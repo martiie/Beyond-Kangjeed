@@ -21,7 +21,10 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <head>
-        <link rel="icon" href="https://lovefoundation.or.th/wp-content/uploads/2024/10/cropped-favicon-192x192.png" sizes="192x192"></link>
+        <link
+          href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600&display=swap"
+          rel="stylesheet"
+        />
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}

@@ -28,7 +28,7 @@
     ".next/types/**/*.ts",
     "**/*.ts",
     "**/*.tsx"
-, "src/app/page.jsx"  ],
+, "src/app/page.jsx", "src/app/chat-bot/page.js", "src/app/chat-bot/page.jsx"  ],
   "exclude": [
     "node_modules"
   ]
