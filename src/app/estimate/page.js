@@ -3,6 +3,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import { RiskEstimationBox } from '../../components/risk-estimation-box';
 import { calRisk } from './calRisk';
+import { RiskMeter } from '../../components/risk-mater';
 
 export default function EstimatePage() {
   const [calRiskData, setCalRiskData] = useState([]);
@@ -44,7 +45,7 @@ export default function EstimatePage() {
 
   return (
     <div className="container mx-auto px-4 py-8 relative">
-      //หลอดความเสี่ยง
+      <RiskMeter calculatedRisk={calculatedRisk} />
       <RiskEstimationBox onCalRiskDataChange={handleCalRiskDataChange} />
       <button
         className="fixed right-10 bottom-8 w-[5.2rem] h-[5.2rem] bg-green-600 text-white font-semibold rounded-full shadow-md hover:bg-green-700 transition duration-200 flex items-center justify-center"
