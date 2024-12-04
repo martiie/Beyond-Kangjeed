@@ -1,28 +1,52 @@
 import React from 'react';
 
-export function RiskMeter({ calculatedRisk, maxRisk = 7026/4 }) {
+export function RiskMeter({ calculatedRisk, maxRisk = (7026/4) }) {
   // Calculate percentage (0-100) based on risk value
   const riskPercentage = Math.min((calculatedRisk / maxRisk) * 100, 100);
 
+  // Determine the risk level and color
+  const getRiskLevel = (percentage) => {
+    if (percentage <= 25) return { level: 'ต่ำ', color: 'from-emerald-500 to-emerald-400', textColor: 'text-emerald-600' };
+    if (percentage <= 50) return { level: 'ปานกลาง', color: 'from-yellow-500 to-yellow-400', textColor: 'text-yellow-600' };
+    if (percentage <= 75) return { level: 'สูง', color: 'from-orange-500 to-orange-400', textColor: 'text-orange-600' };
+    return { level: 'สูงมาก', color: 'from-red-600 to-red-500', textColor: 'text-red-600' };
+  };
+
+  const { level, color, textColor } = getRiskLevel(riskPercentage);
+
   return (
-    <div className="w-full max-w-3xl mx-auto p-6">
-      <div className="flex justify-between mb-2 font-medium">
-        <span>ความเสี่ยงต่ำ</span>
-        <span>ความเสี่ยงสูง</span>
+    <div className="w-full max-w-3xl mx-auto p-6 mb-8 rounded-xl">
+      <div className="mb-4 text-center">
+        <span className="text-2xl font-semibold text-gray-800">ระดับความเสี่ยง: </span>
+        <span className={`text-3xl font-bold ${textColor}`}>{level}</span>
       </div>
-      <div className="h-4 bg-gray-200 rounded-full overflow-hidden">
+      <div className="mb-6 text-center text-lg text-gray-600">
+        ค่าความเสี่ยง: <span className="font-semibold">{calculatedRisk.toLocaleString()}</span>
+      </div>        
+      <div className="relative h-10 bg-gray-200 rounded-full overflow-hidden">
         <div
-          className="h-full bg-red-600 transition-all duration-500 ease-out"
+          className={`h-full ${color} transition-all duration-500 ease-out bg-gradient-to-r`}
           style={{ width: `${riskPercentage}%` }}
           role="progressbar"
           aria-valuenow={calculatedRisk}
           aria-valuemin={0}
           aria-valuemax={maxRisk}
         />
+        <div className="absolute top-0 left-0 w-full h-full flex justify-between items-center px-3 text-sm font-medium text-white">
+          <span>0</span>
+          <span>25%</span>
+          <span>50%</span>
+          <span>75%</span>
+          <span>100%</span>
+        </div>
       </div>
-      <div className="mt-2 text-center text-sm text-gray-600">
-        ค่าความเสี่ยง: {calculatedRisk.toLocaleString()}
+      <div className="flex justify-between mt-3 text-base font-medium text-gray-700">
+        <span>ต่ำ</span>
+        <span>ปานกลาง</span>
+        <span>สูง</span>
+        <span>สูงมาก</span>
       </div>
     </div>
   );
 }
+
