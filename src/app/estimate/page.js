@@ -44,13 +44,7 @@ export default function EstimatePage() {
 
   return (
     <div className="container mx-auto px-4 py-8 relative">
-      {riskMater ? (
-        <h1 className="text-4xl font-bold text-center mb-12">โอกาสที่คู่นอนของคุณจะติดเชื้อจากคุณคือ... {calculatedRisk}</h1>
-      ) :
-        (
-          <h1 className="text-4xl font-bold text-center mb-12">โอกาสที่คุณจะติดเชื้อจากคู่นอนของคุณคือ... {calculatedRisk}</h1>
-        )
-      }
+      //หลอดความเสี่ยง
       <RiskEstimationBox onCalRiskDataChange={handleCalRiskDataChange} />
       <button
         className="fixed right-10 bottom-8 w-[5.2rem] h-[5.2rem] bg-green-600 text-white font-semibold rounded-full shadow-md hover:bg-green-700 transition duration-200 flex items-center justify-center"
