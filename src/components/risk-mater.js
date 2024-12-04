@@ -23,7 +23,7 @@ export function RiskMeter({ calculatedRisk, maxRisk = (7026/4) }) {
       <div className="mb-6 text-center text-lg text-gray-600">
         ค่าความเสี่ยง: <span className="font-semibold">{calculatedRisk.toLocaleString()}</span>
       </div>        
-      <div className="relative h-10 bg-gray-200 rounded-full overflow-hidden">
+      <div className="relative h-10 bg-gray-200 rounded-full overflow-hidden shadow-lg">
         <div
           className={`h-full ${color} transition-all duration-500 ease-out bg-gradient-to-r`}
           style={{ width: `${riskPercentage}%` }}
@@ -32,13 +32,6 @@ export function RiskMeter({ calculatedRisk, maxRisk = (7026/4) }) {
           aria-valuemin={0}
           aria-valuemax={maxRisk}
         />
-        <div className="absolute top-0 left-0 w-full h-full flex justify-between items-center px-3 text-sm font-medium text-white">
-          <span>0</span>
-          <span>25%</span>
-          <span>50%</span>
-          <span>75%</span>
-          <span>100%</span>
-        </div>
       </div>
       <div className="flex justify-between mt-3 text-base font-medium text-gray-700">
         <span>ต่ำ</span>
