@@ -1,3 +1,4 @@
+import { Box } from 'lucide-react';
 import React from 'react';
 
 export function RiskMeter({ calculatedRisk, maxRisk = (7026/4) }) {
@@ -23,7 +24,7 @@ export function RiskMeter({ calculatedRisk, maxRisk = (7026/4) }) {
       <div className="mb-6 text-center text-lg text-gray-600">
         ค่าความเสี่ยง: <span className="font-semibold">{calculatedRisk.toLocaleString()}</span>
       </div>        
-      <div className="relative h-10 bg-gray-200 rounded-full overflow-hidden shadow-lg">
+      <div className="relative h-10 rounded-full overflow-hidden border" style={{boxShadow: '0px 0px 5px 2px rgb(0, 0, 0, 0.075'}}>
         <div
           className={`h-full ${color} transition-all duration-500 ease-out bg-gradient-to-r`}
           style={{ width: `${riskPercentage}%` }}

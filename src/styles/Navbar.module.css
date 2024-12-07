@@ -1,0 +1,94 @@
+.nav {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 2rem;
+  color: white;
+  background-color: transparent;
+  }
+  
+  .navTitle {
+    font-size: 2.25rem;
+    font-weight: 300;
+    color: white;
+  }
+  
+  .desktopMenu {
+    display: flex;
+    gap: 2.5rem;
+  }
+  
+  .navLink {
+    font-weight: 800;
+    font-size: 1.125rem;
+    text-decoration: none;
+    transition: color 0.3s ease;
+  }
+  
+  .navLink:hover {
+    color: #f3f4f6;
+  }
+  
+  .hamburger {
+    display: none;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    z-index: 11;
+    color: white;
+  }
+  
+  .mobileMenu {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.9);
+    z-index: 1000;
+  }
+  
+  .mobileMenuContent {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 2rem;
+    padding: 2rem;
+  }
+  
+  @media (max-width: 768px) {
+    .nav {
+      padding: 1rem;
+    }
+  
+    .desktopMenu {
+      display: none;
+    }
+  
+    .hamburger {
+      display: block;
+    }
+  
+    .mobileMenu {
+      display: flex;
+    }
+  
+    .navTitle {
+      font-size: 1.5rem;
+    }
+  
+    .navLink {
+      font-size: 1rem;
+    }
+  }
+  
+  
