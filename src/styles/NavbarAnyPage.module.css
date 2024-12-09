@@ -1,96 +1,137 @@
 .nav {
-    position: relative;
-    top: 0;
-    left: 0;
-    right: 0;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 1rem 2rem;
-    color: white;
-    background-color: transparent;
-    background: white;
+  position: relative;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 2rem;
+  background: white;
+  z-index: 1000;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.navTitle {
+  font-size: 2.25rem;
+  font-weight: 300;
+  color: rgb(0, 0, 0);
+}
+
+.desktopMenu {
+  display: flex;
+  gap: 2.5rem;
+  align-items: center;
+}
+
+.navLink {
+  font-weight: 800;
+  font-size: 1.125rem;
+  text-decoration: none;
+  transition: color 0.3s ease;
+  color: rgb(0, 0, 0);
+}
+
+.hamburger {
+  display: none;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  z-index: 1001;
+  color: rgb(0, 0, 0);
+}
+
+.mobileMenu {
+  display: none;
+  position: fixed;
+  top: -100%;
+  left: 0;
+  width: 100%;
+  height: auto;
+  max-height: 80vh;
+  background-color: white;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  transition: top 0.3s ease;
+  z-index: 999;
+  overflow-y: auto;
+}
+
+.mobileMenu.open {
+  top: 0;
+}
+
+.mobileMenuContent {
+  display: flex;
+  flex-direction: column;
+  padding: 5rem 2rem 2rem;
+}
+
+.mobileNavLink {
+  font-weight: 800;
+  font-size: 1rem;
+  text-decoration: none;
+  color: rgb(0, 0, 0);
+  transition: color 0.3s ease;
+  padding: 1rem 0;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+@media (max-width: 900px) {
+  .nav {
+    padding: 1rem;
   }
-  
-  .navTitle {
-    font-size: 2.25rem;
-    font-weight: 300;
-    color: rgb(0, 0, 0);
-  }
-  
+
   .desktopMenu {
-    display: flex;
-    gap: 2.5rem;
-  }
-  
-  .navLink {
-    font-weight: 800;
-    font-size: 1.125rem;
-    text-decoration: none;
-    transition: color 0.3s ease;
-    color: rgb(0, 0, 0);
-  }
-  
-  .navLink:hover {
-    color: rgb(0, 0, 0);
-  }
-  
-  .hamburger {
     display: none;
-    background: transparent;
-    border: none;
-    cursor: pointer;
-    padding: 0;
-    z-index: 11;
-    color: rgb(0, 0, 0);
   }
-  
+
+  .hamburger {
+    display: block;
+  }
+
   .mobileMenu {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.9);
-    z-index: 1000;
+    display: block;
   }
-  
-  .mobileMenuContent {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    gap: 2rem;
-    padding: 2rem;
+
+  .navTitle {
+    font-size: 1.5rem;
   }
-  
-  @media (max-width: 768px) {
-    .nav {
-      padding: 1rem;
-    }
-  
-    .desktopMenu {
-      display: none;
-    }
-  
-    .hamburger {
-      display: block;
-    }
-  
-    .mobileMenu {
-      display: flex;
-    }
-  
-    .navTitle {
-      font-size: 1.5rem;
-    }
-  
-    .navLink {
-      font-size: 1rem;
-    }
+}
+
+.chatbotButton,
+.mobileChatbotButton {
+  background-image: linear-gradient(60deg, #ec4899, #3b82f6, #8120c7);
+  background-size: 200% 100%;
+  color: white;
+  font-weight: 600;
+  border: none;
+  padding: 0.5rem 1.25rem;
+  border-radius: 50px;
+  transition: all 0.5s ease-in-out;
+}
+
+.chatbotButton:hover,
+.mobileChatbotButton:hover {
+  transform: scale(1.05);
+  background-image: linear-gradient(60deg, #eab308, #dd4646, #ec4899); 
+  background-size: 175% 100%;
+}
+
+.mobileChatbotButton {
+  font-size: 1.125rem;
+  padding: 0.75rem 1.25rem;
+  margin-top: 1rem;
+}
+
+@media (max-width: 900px) {
+  .chatbotButton {
+    font-size: 0.875rem;
+    padding: 0.4rem 1.25rem;
   }
-  
-  
+
+  .mobileChatbotButton {
+    border-radius: 7px;
+  }
+}
+

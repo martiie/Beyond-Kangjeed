@@ -38,7 +38,7 @@ export default function ChatBot({ dataset, fetchGPTResponse, isOpenChat, setIsOp
   }, [messages])
 
   return (
-    <div className="fixed bottom-4 right-4 w-80 bg-white rounded-lg shadow-lg overflow-hidden">
+    <div className="fixed bottom-4 right-4 w-80 bg-white rounded-lg border overflow-hidden" style={{ zIndex: 1000, boxShadow: '0px 0px 4px 2px rgb(0, 0, 0, 0.065'}}>
       {/* Header */}
       <div className="flex items-center justify-between p-3 bg-white border-b">
         <h1 className="text-sm font-bold text-gray-800">Chat Bot</h1>

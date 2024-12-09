@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from "next/link"
 import { Pacifico } from 'next/font/google'
-import { Menu } from 'lucide-react'
+import { Menu, X } from 'lucide-react'
 import styles from '../styles/Navbar.module.css'
 
 const pacifico = Pacifico({
@@ -19,43 +19,45 @@ const Navbar = () => {
     setIsMenuOpen(!isMenuOpen);
   };
 
-  const handleBackgroundClick = (e) => {
-    if (e.target === e.currentTarget) {
-      setIsMenuOpen(false);
-    }
-  };
-
   useEffect(() => {
     if (isMenuOpen) {
       document.body.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = 'unset';
     }
+
+    // Cleanup function to reset overflow when component unmounts
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
   }, [isMenuOpen]);
 
   return (
     <>
-      <nav className={`${styles.nav} shadow-lg`}>
+      <nav className={`${styles.nav}`}>
         <h1 className={`${styles.navTitle} ${pacifico.className}`}>Love Foundation</h1>
         <div className={styles.desktopMenu}>
           <Link href="#" className={styles.navLink}>เกี่ยวกับเรา</Link>
           <Link href="#" className={styles.navLink}>ข่าวสาร</Link>
           <Link href="#" className={styles.navLink}>ติดต่อเรา</Link>
         </div>
-        <button className={styles.hamburger} onClick={toggleMenu}>
-          <Menu size={24} />
+        <button 
+          className={styles.hamburger} 
+          onClick={toggleMenu} 
+          aria-label="Toggle menu"
+          aria-expanded={isMenuOpen}
+        >
+          {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
         </button>
       </nav>
 
-      {isMenuOpen && (
-        <div className={styles.mobileMenu} onClick={handleBackgroundClick}>
-          <div className={styles.mobileMenuContent}>
-            <Link href="#" className={styles.navLink}>เกี่ยวกับเรา</Link>
-            <Link href="#" className={styles.navLink}>ข่าวสาร</Link>
-            <Link href="#" className={styles.navLink}>ติดต่อเรา</Link>
-          </div>
+      <div className={`${styles.mobileMenu} ${isMenuOpen ? styles.open : ''}`}>
+        <div className={styles.mobileMenuContent}>
+          <Link href="#" className={styles.navLink} onClick={toggleMenu}>เกี่ยวกับเรา</Link>
+          <Link href="#" className={styles.navLink} onClick={toggleMenu}>ข่าวสาร</Link>
+          <Link href="#" className={styles.navLink} onClick={toggleMenu}>ติดต่อเรา</Link>
         </div>
-      )}
+      </div>
     </>
   );
 };

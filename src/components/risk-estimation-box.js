@@ -151,7 +151,7 @@ export function RiskEstimationBox({ onCalRiskDataChange }) {
     const enabledCheckboxes = getEnabledCheckboxes(isPartner1)
 
     return (
-      <div className="bg-white p-4 sm:p-6 md:p-10 rounded-lg w-full border mb-6" style={{boxShadow: '0px 0px 5px 2px rgb(0, 0, 0, 0.075'}}>
+      <div className="bg-white p-4 sm:p-6 md:p-10 rounded-lg w-full border mb-6" style={{boxShadow: '0px 0px 4px 2px rgb(0, 0, 0, 0.065'}}>
         {isPartner1 ? (
           <h2 className="text-2xl sm:text-3xl font-extrabold text-center text-gray-800">คุณ</h2>
         ) :

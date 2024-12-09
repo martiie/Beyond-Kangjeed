@@ -21,7 +21,7 @@ const HomePage = () => {
 
       <div className={styles.mainContent}>
         <h1 className={styles.title}>
-          การป้องกันและการ<br />ดูแลรักษาโรค HIV
+          การป้องกันและ<br />การดูแลรักษาโรค HIV
         </h1>
         <div className={styles.descriptionContainer}>
           <p className={styles.description}>
