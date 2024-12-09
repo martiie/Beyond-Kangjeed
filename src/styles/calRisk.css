@@ -1,3 +1,7 @@
+body {
+  background-color: #fafafa;
+}
+
 @media (max-width: 640px) {
     .ArrowShowOnly {
       background-size: 20px;

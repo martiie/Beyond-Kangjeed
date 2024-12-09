@@ -48,7 +48,7 @@ export default function EstimatePage() {
       <RiskMeter calculatedRisk={calculatedRisk} />
       <RiskEstimationBox onCalRiskDataChange={handleCalRiskDataChange} />
       <button
-        className="fixed right-10 bottom-8 w-[5.2rem] h-[5.2rem] bg-green-600 text-white font-semibold rounded-full shadow-md hover:bg-green-700 transition duration-200 flex items-center justify-center"
+        className="fixed right-8 bottom-8 w-[5.2rem] h-[5.2rem] bg-green-600 text-white font-semibold rounded-full shadow-md hover:bg-green-700 transition duration-200 flex items-center justify-center"
         onClick={calculateRisk}
         aria-label="Calculate Risk"
       >

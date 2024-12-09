@@ -1,37 +1,15 @@
 'use client'
 
+import { useState } from "react";
 import Link from "next/link";
-import { Pacifico } from 'next/font/google'
-import styles from '../styles/HomePage.module.css'
-import { useState, useEffect } from 'react'
-import { Menu } from 'lucide-react'
-
-const pacifico = Pacifico({
-  weight: '400',
-  subsets: ['latin'],
-  display: 'swap',
-})
+import styles from '../styles/HomePage.module.css';
+import Navbar from '../components/navbar-homepage';
+import ChatBot from '../components/chatBot'; // นำเข้า ChatBot Component
+import { fetchGPTResponse } from "../app/chat-bot/api"
+import { dataset } from "../app/chat-bot/dataset"
 
 const HomePage = () => {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-
-  const toggleMenu = () => {
-    setIsMenuOpen(!isMenuOpen);
-  };
-
-  const handleBackgroundClick = (e) => {
-    if (e.target === e.currentTarget) {
-      setIsMenuOpen(false);
-    }
-  };
-
-  useEffect(() => {
-    if (isMenuOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = 'unset';
-    }
-  }, [isMenuOpen]);
+  const [isOpenChat, setIsOpenChat] = useState(false); // State สำหรับควบคุมการแสดงผลของ ChatBot
 
   return (
     <div className={styles.container} style={{
@@ -39,38 +17,18 @@ const HomePage = () => {
     }}>
       <div className={styles.overlay}></div>
 
-      <nav className={styles.nav}>
-        <h1 className={`${styles.navTitle} ${pacifico.className}`}>Love Foundation</h1>
-        <div className={styles.desktopMenu}>
-          <a href="#" className={styles.navLink}>เกี่ยวกับเรา</a>
-          <a href="#" className={styles.navLink}>ข่าวสาร</a>
-          <a href="#" className={styles.navLink}>ติดต่อเรา</a>
-        </div>
-        <button className={styles.hamburger} onClick={toggleMenu}>
-          <Menu size={24} />
-        </button>
-      </nav>
-
-      {isMenuOpen && (
-        <div className={styles.mobileMenu} onClick={handleBackgroundClick}>
-          <div className={styles.mobileMenuContent}>
-            <a href="#" className={styles.navLink}>เกี่ยวกับเรา</a>
-            <a href="#" className={styles.navLink}>ข่าวสาร</a>
-            <a href="#" className={styles.navLink}>ติดต่อเรา</a>
-          </div>
-        </div>
-      )}
+      <Navbar />
 
       <div className={styles.mainContent}>
         <h1 className={styles.title}>
-          การป้องกันและการ<br />ดูแลรักษาโรค HIV
+          การป้องกันและ<br />การดูแลรักษาโรค HIV
         </h1>
         <div className={styles.descriptionContainer}>
           <p className={styles.description}>
             HIV หรือไวรัสภูมิคุ้มกันบกพร่องเป็นไวรัสที่โจมตีระบบภูมิคุ้มกัน
-            ทำให้ร่างกายอ่อนแอและเสี่ยงต่อการติดเชื้อและโรคต่างๆการ
-            ติดเชื้อ HIV สามารถป้องกันได้ด้วยการใช้ถุงยางอนามัยทุกครั้ง
-            ที่มีเพศสัมพันธ์ และตรวจสุขภาพเป็นประจำการรักษา HIV มีการ
+            ทำให้ร่างกายอ่อนแอและเสี่ยงต่อการติดเชื้อและโรคต่างๆ
+            การติดเชื้อ HIV สามารถป้องกันได้ด้วยการใช้ถุงยางอนามัยทุกครั้ง
+            ที่มีเพศสัมพันธ์ และตรวจสุขภาพเป็นประจำ การรักษา HIV มีการ
             พัฒนาอย่างต่อเนื่อง ช่วยให้ผู้ติดเชื้อมีชีวิตที่ยืนยาวและคุณภาพชีวิตที่ดีขึ้น
           </p>
         </div>
@@ -80,20 +38,27 @@ const HomePage = () => {
               ประเมินความเสี่ยง
             </button>
           </Link>
-          <Link href="/chat-bot">
-            <button className={styles.chatbotButton}>
-              <span className={styles.chatbotButtonBorder}>
-                <span className={styles.chatbotButtonContent}>
-                  ปรึกษา ChatBot
-                </span>
+          <button 
+            className={styles.chatbotButton} 
+            onClick={() => setIsOpenChat(!isOpenChat)} // ใช้ isOpenChat แทน
+          >
+            <span className={styles.chatbotButtonBorder}>
+              <span className={styles.chatbotButtonContent}>
+                ปรึกษา ChatBot
               </span>
-            </button>
-          </Link>
+            </span>
+          </button>
         </div>
       </div>
+
+      {/* แสดง ChatBot Component เมื่อ isOpenChat เป็น true */}
+      {isOpenChat && (
+        <div className={styles.chatbotContainer}>
+          <ChatBot isOpenChat={isOpenChat} setIsOpenChat={setIsOpenChat} dataset={dataset} fetchGPTResponse={fetchGPTResponse} />
+        </div>
+      )}
     </div>
   );
 };
 
 export default HomePage;
-
