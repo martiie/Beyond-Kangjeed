@@ -10,6 +10,7 @@ import { dataset } from "../app/chat-bot/dataset"
 
 const HomePage = () => {
   const [isOpenChat, setIsOpenChat] = useState(false); // State สำหรับควบคุมการแสดงผลของ ChatBot
+  console.log('Process.cwd():', process.cwd());
 
   return (
     <div className={styles.container} style={{
