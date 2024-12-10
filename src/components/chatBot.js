@@ -1,71 +1,76 @@
-'use client'
+'use client';
 
-import { useState, useRef, useEffect } from "react"
-import { X } from 'lucide-react'
+import { useState, useRef, useEffect } from 'react';
+import { X } from 'lucide-react';
+import { findSimilar } from '../app/chat-bot/find_similar';
 
-export default function ChatBot({ dataset, fetchGPTResponse, isOpenChat, setIsOpenChat }) {
-  const [messages, setMessages] = useState([])
-  const [userMessage, setUserMessage] = useState("")
-  const [loading, setLoading] = useState(false)
-  const messagesEndRef = useRef(null)
+export default function ChatBot({ isOpenChat, setIsOpenChat }) {
+  const [messages, setMessages] = useState([]);
+  const [userMessage, setUserMessage] = useState('');
+  const [loading, setLoading] = useState(false);
+  const messagesEndRef = useRef(null);
 
   const handleSendMessage = async () => {
-    if (userMessage.trim() === "") return
+    if (userMessage.trim() === '') return;
 
-    const newUserMessage = { role: "user", content: userMessage }
-    setMessages((prev) => [...prev, newUserMessage])
-    setUserMessage("")
-    setLoading(true)
+    const newUserMessage = { role: 'user', content: userMessage };
+    setMessages((prev) => [...prev, newUserMessage]);
+    setUserMessage('');
+    setLoading(true);
 
     try {
-      const fullMessages = [...dataset, ...messages, newUserMessage]
-      const data = await fetchGPTResponse(fullMessages)
-      const botMessage = { role: "assistant", content: data.choices[0].message.content }
-      setMessages((prev) => [...prev, botMessage])
-    } catch (error) {
-      const errorMessage = {
-        role: "assistant",
-        content: "Sorry, there was an error. Please try again.",
-      }
-      setMessages((prev) => [...prev, errorMessage])
-    }
+      const botResponse = await findSimilar(userMessage);
+      console.log('Response from findSimilar:', botResponse);
 
-    setLoading(false)
-  }
+      if (!botResponse) {
+        throw new Error('Failed to fetch response from API');
+      }
+
+      // Use botResponse directly
+      const botMessage = { role: 'assistant', content: botResponse };
+      setMessages((prev) => [...prev, botMessage]);
+    } catch (error) {
+      console.error('Error in handleSendMessage:', error);
+      setMessages((prev) => [
+        ...prev,
+        { role: 'assistant', content: 'ขออภัยค่ะ เกิดข้อผิดพลาดในการค้นหาคำตอบ กรุณาลองใหม่อีกครั้ง' },
+      ]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
-  }, [messages])
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
+
+  if (!isOpenChat) return null;
 
   return (
-    <div className="fixed bottom-4 right-4 w-80 bg-white rounded-lg border overflow-hidden" style={{ zIndex: 1000, boxShadow: '0px 0px 4px 2px rgb(0, 0, 0, 0.065'}}>
-      {/* Header */}
+    <div className="fixed bottom-4 right-4 w-80 bg-white rounded-lg border overflow-hidden" style={{ zIndex: 1000 }}>
       <div className="flex items-center justify-between p-3 bg-white border-b">
         <h1 className="text-sm font-bold text-gray-800">Chat Bot</h1>
-        <button 
+        <button
           className="p-1 hover:bg-gray-100 rounded"
-          onClick={() => setIsOpenChat(false)} // ปิด ChatBot เมื่อกดปุ่ม X
+          onClick={() => setIsOpenChat(false)}
         >
           <X className="w-4 h-4 text-gray-600" />
         </button>
       </div>
-
-      {/* Messages */}
       <div className="h-64 overflow-y-auto p-3 space-y-2 bg-gray-50">
         {messages.map((message, index) => (
           <div
             key={index}
-            className={`flex ${message.role === "user" ? "justify-end" : "justify-start"} items-start gap-2`}
+            className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'} items-start gap-2`}
           >
-            {message.role === "assistant" && (
+            {message.role === 'assistant' && (
               <div className="w-6 h-6 rounded-full bg-gradient-to-r from-pink-500 to-orange-500 flex-shrink-0" />
             )}
             <div
-              className={`max-w-[70%] p-2 rounded-lg text-sm ${
-                message.role === "user"
-                  ? "bg-gray-200 text-gray-800"
-                  : "bg-white border border-gray-200 shadow-sm"
-              }`} style={{ marginBottom: "4px", marginTop: "4px" }}
+              className={`max-w-[70%] p-2 rounded-lg text-sm ${message.role === 'user'
+                  ? 'bg-gray-200 text-gray-800'
+                  : 'bg-white border border-gray-200 shadow-sm'
+                }`}
             >
               {message.content}
             </div>
@@ -73,15 +78,13 @@ export default function ChatBot({ dataset, fetchGPTResponse, isOpenChat, setIsOp
         ))}
         <div ref={messagesEndRef} />
       </div>
-
-      {/* Input */}
       <div className="p-2 bg-white">
         <div className="flex items-center bg-gray-100 rounded-full">
           <input
             type="text"
             value={userMessage}
             onChange={(e) => setUserMessage(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
+            onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
             className="flex-1 bg-transparent px-4 py-2 text-sm focus:outline-none"
             placeholder="ถามอะไรก็อย่าง..."
           />
@@ -101,5 +104,5 @@ export default function ChatBot({ dataset, fetchGPTResponse, isOpenChat, setIsOp
         </div>
       </div>
     </div>
-  )
+  );
 }
