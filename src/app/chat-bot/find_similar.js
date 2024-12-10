@@ -7,7 +7,7 @@ import { dataset } from './dataset';
 
 export async function loadData() {
   try {
-    const filePath = path.join(process.cwd(), 'src', 'app', 'chat-bot', 'qa_data.json');
+    const filePath = path.join('src', 'app', 'chat-bot', 'qa_data.json');
     const rawData = await fs.readFile(filePath, 'utf-8');
     const data = JSON.parse(rawData);
 
