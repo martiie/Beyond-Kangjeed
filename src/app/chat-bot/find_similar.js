@@ -1,15 +1,17 @@
 // find_similar.js
 'use server';
 
-import fs from 'fs/promises';
-import path from 'path';
+// import fs from 'fs/promises';
+// import path from 'path';
 import { dataset } from './dataset';
-
+import { qa_data } from './qa_data'
 export async function loadData() {
   try {
-    const filePath = path.join(process.cwd(), 'src', 'app', 'chat-bot', 'qa_data.json');
-    const rawData = await fs.readFile(filePath, 'utf-8');
-    const data = JSON.parse(rawData);
+    // const filePath = path.join(process.cwd(), 'src', 'app', 'chat-bot', 'qa_data.json');
+    // const rawData = await fs.readFile(filePath, 'utf-8');
+    // const data = JSON.parse(rawData);
+    const data = qa_data;
+    console.log(data);
 
     data.forEach(entry => {
       if (entry.embedding && !Array.isArray(entry.embedding)) {
