@@ -54,10 +54,19 @@ export async function findSimilar(query, similarityThreshold = 0.8) {
       console.log('RAG');
       const answer = topEntry.entry.answer;
       const refinedAnswer = await refineAnswerWithGPT(answer);
+
+      dataset.push({ role: 'user', content: query });
+      dataset.push({ role: 'assistant', content: refinedAnswer });
+
       return refinedAnswer;
     } else {
       console.log('GPT');
-      return await fetchGPTResponse([{ role: 'user', content: query }]);
+      const gptResponse = await fetchGPTResponse([{ role: 'user', content: query }]);
+
+      dataset.push({ role: 'user', content: query });
+      dataset.push({ role: 'assistant', content: gptResponse });
+
+      return gptResponse
     }
   } catch (error) {
     console.error('Error finding similar entry:', error);
