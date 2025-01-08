@@ -6,6 +6,9 @@ import * as cheerio from "cheerio";
 import { dataset } from '../../data/dataset';
 import { qa_data } from '../../data/qa_data';
 
+let qa_data_local = [];
+let dataset_local = [];
+
 export async function loadData() {
   try {
     console.log('Loaded data:', qa_data);
