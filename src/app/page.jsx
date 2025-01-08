@@ -5,8 +5,6 @@ import Link from "next/link";
 import styles from '../styles/HomePage.module.css';
 import Navbar from '../components/navbar-homepage';
 import ChatBot from '../components/chatBot'; // นำเข้า ChatBot Component
-import { fetchGPTResponse } from "../app/chat-bot/api"
-import { dataset } from "../app/chat-bot/dataset"
 
 const HomePage = () => {
   const [isOpenChat, setIsOpenChat] = useState(false); // State สำหรับควบคุมการแสดงผลของ ChatBot
@@ -55,7 +53,7 @@ const HomePage = () => {
       {/* แสดง ChatBot Component เมื่อ isOpenChat เป็น true */}
       {isOpenChat && (
         <div className={styles.chatbotContainer}>
-          <ChatBot isOpenChat={isOpenChat} setIsOpenChat={setIsOpenChat} dataset={dataset} fetchGPTResponse={fetchGPTResponse} />
+          <ChatBot isOpenChat={isOpenChat} setIsOpenChat={setIsOpenChat} />
         </div>
       )}
     </div>

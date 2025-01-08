@@ -6,8 +6,6 @@ import { Pacifico } from 'next/font/google'
 import { Menu, X } from 'lucide-react'
 import styles from '../styles/NavbarAnyPage.module.css'
 import ChatBot from '../components/chatBot'
-import { fetchGPTResponse } from "../app/chat-bot/api"
-import { dataset } from "../app/chat-bot/dataset"
 
 const pacifico = Pacifico({
   weight: '400',
@@ -70,7 +68,7 @@ const Navbar = () => {
 
       {isOpenChat && (
         <div className={styles.chatbotContainer}>
-          <ChatBot isOpenChat={isOpenChat} setIsOpenChat={setIsOpenChat} dataset={dataset} fetchGPTResponse={fetchGPTResponse} />
+          <ChatBot isOpenChat={isOpenChat} setIsOpenChat={setIsOpenChat}/>
         </div>
       )}
     </>

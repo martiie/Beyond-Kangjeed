@@ -1,4 +1,4 @@
-[
+export const qa_data = [
     {
         "id": "1",
         "question": "รู้จักโรคติดต่อทางเพศสัมพันธ์หรือ STDs มั้ย?",

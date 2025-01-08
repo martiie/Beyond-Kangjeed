@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { X } from 'lucide-react';
-import { findSimilar } from '../app/chat-bot/find_similar';
+import { findSimilar } from '../app/chat-bot/chatBot_mainFunc';
 
 export default function ChatBot({ isOpenChat, setIsOpenChat }) {
   const [messages, setMessages] = useState([]);
