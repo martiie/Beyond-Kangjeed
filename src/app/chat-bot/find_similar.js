@@ -1,89 +1,87 @@
-// find_similar.js
 'use server';
 
-// import fs from 'fs/promises';
-// import path from 'path';
-import { qa_data } from './qa_data'
+import fs from 'fs/promises';
+import fetch from 'node-fetch';
+import * as cheerio from "cheerio";
 import { dataset } from './dataset';
+import { qa_data } from './qa_data';
+
+let qa_data_local = [];
+let dataset_local = [];
 
 export async function loadData() {
   try {
-    // const filePath = path.join('src', 'app', 'chat-bot', 'qa_data.json');
-    // const rawData = await fs.readFile(filePath, 'utf-8');
-    // const data = JSON.parse(rawData);
-    const data = qa_data;
-
-    data.forEach(entry => {
+    console.log('Loaded data:', qa_data);
+    qa_data.forEach(entry => {
       if (entry.embedding && !Array.isArray(entry.embedding)) {
         entry.embedding = Array.from(entry.embedding);
       }
     });
-
-    return data;
+    return qa_data;
   } catch (error) {
     console.error('Error loading data:', error);
-    throw new Error('Failed to load qa_data.json file: ' + error.message);
+    throw new Error('Failed to load qa_data: ' + error.message);
   }
 }
 
-export async function findSimilar(query, similarityThreshold = 0.8) {
+export async function findSimilar(query) {
   try {
+    console.log('Processing query:', query);
     const queryEmbedding = await generateEmbedding(query);
     const data = await loadData();
 
-    const similarities = data.map(entry => {
-      const score = cosineSimilarity(queryEmbedding, entry.embedding);
-      return { entry, score };
-    });
-    const resolvedSimilarities = await Promise.all(
-      similarities.map(async (item) => {
-        const score = await item.score;
-        return { ...item, score };
-      })
-    );
-    
-    const sortedSimilarities = resolvedSimilarities.sort((a, b) => b.score - a.score);
-    // console.log('queryEmbedding:',sortedSimilarities);
+    const topSimilarChunks = await semanticSearch(queryEmbedding, data, 20);
+    console.log('Top similar chunks:', topSimilarChunks);
 
-    const topEntry = sortedSimilarities[0];
-    const score = await topEntry?.score;
-    // console.log('topEntry?.entry:',topEntry?.entry)
-    console.log('RAG Score:', score);
-
-    if (score >= similarityThreshold) {
-      console.log('RAG');
-      const answer = topEntry.entry.answer;
-      const refinedAnswer = await refineAnswerWithGPT(answer);
-
-      dataset.push({ role: 'user', content: query });
-      dataset.push({ role: 'assistant', content: refinedAnswer });
-
-      return refinedAnswer;
-    } else {
-      console.log('GPT');
-      const gptResponse = await fetchGPTResponse([{ role: 'user', content: query }]);
-
-      dataset.push({ role: 'user', content: query });
-      dataset.push({ role: 'assistant', content: gptResponse });
-
-      return gptResponse
+    // ตรวจสอบคะแนนของคำตอบที่คล้ายที่สุด
+    if (topSimilarChunks.length > 0 && topSimilarChunks[0].score >= 0.8) {
+      const bestMatch = topSimilarChunks[0].entry;
+      if (bestMatch.question && bestMatch.answer) {
+        console.log('High similarity found, using answer from qa_data:', bestMatch.answer);
+        return bestMatch.answer;
+      }
     }
+
+    // Combine similar chunks into a single context
+    const combinedContext = topSimilarChunks.map(chunk => chunk.entry.content || chunk.entry.answer).join('\n\n');
+
+    // Generate answer using the combined context
+    const answer = await generateAnswer(query, combinedContext);
+    console.log('Generated answer:', answer);
+
+    // Add query and answer to dataset
+    dataset.push({ role: 'user', content: query });
+    dataset.push({ role: 'assistant', content: answer });
+
+    return answer;
   } catch (error) {
-    console.error('Error finding similar entry:', error);
-    throw new Error('Failed to find similar entry: ' + error.message);
+    console.error('Error in findSimilar:', error);
+    throw new Error('Failed to process query: ' + error.message);
   }
 }
-async function refineAnswerWithGPT(answer) {
-  const response = await fetchGPTResponse([
-      { role: 'system', content: 'โปรดปรับแต่งและจัดระเบียบข้อความต่อไปนี้ให้อยู่ในรูปแบบที่สอดคล้องกันและอ่านง่ายยิ่งขึ้น และถ้ามีการแบ่งเป็นข้อๆให้เว้นบรรทัด' },
-      { role: 'user', content: `${answer}` }
-  ]);
 
-  return response;  
+async function semanticSearch(queryEmbedding, data, topN) {
+  const similarities = await Promise.all(data.map(async (entry) => {
+    const score = await cosineSimilarity(queryEmbedding, entry.embedding);
+    return { entry, score };
+  }));
+
+  return similarities
+    .sort((a, b) => b.score - a.score)
+    .slice(0, topN);
+}
+
+async function generateAnswer(query, context) {
+  const messages = [
+    ...dataset,
+    { role: 'system', content: 'You are a helpful assistant. Use the following context to answer the user\'s question. If the answer is not in the context, use your general knowledge to provide a relevant answer. If you really don\'t have enough information, say "I don\'t have enough information to answer that question."' },
+    { role: 'user', content: `Context: ${context}\n\nQuestion: ${query}` }
+  ];
+  
+  return await fetchGPTResponse(messages);
 }
 
 async function fetchGPTResponse(messages) {
-  const fullMessages = [...dataset, ...messages];
   const response = await fetch("https://api.openai.com/v1/chat/completions", {
     method: "POST",
     headers: {
@@ -92,7 +90,9 @@ async function fetchGPTResponse(messages) {
     },
     body: JSON.stringify({
       model: "gpt-4o",
-      messages: fullMessages,
+      messages: messages,
+      temperature: 0.7, // Add temperature for more varied responses
+      max_tokens: 300, // Limit response length
     }),
   });
 
@@ -125,6 +125,7 @@ export async function generateEmbedding(text) {
       throw new Error(responseBody.error?.message || 'Failed to generate embedding');
     }
 
+    console.log('Generated Embedding:', responseBody.data[0].embedding);
     return responseBody.data[0].embedding;
   } catch (error) {
     console.error('Error generating embedding:', error);
@@ -139,3 +140,120 @@ export async function cosineSimilarity(vecA, vecB) {
 
   return magnitudeA && magnitudeB ? dotProduct / (magnitudeA * magnitudeB) : 0;
 }
+
+function splitTextIntoChunks(text, maxTokens = 4000) {
+  const words = text.split(/\s+/);
+  const chunks = [];
+  let currentChunk = '';
+
+  for (const word of words) {
+    if ((currentChunk + ' ' + word).length > maxTokens) {
+      chunks.push(currentChunk.trim());
+      currentChunk = word;
+    } else {
+      currentChunk += (currentChunk ? ' ' : '') + word;
+    }
+  }
+
+  if (currentChunk) {
+    chunks.push(currentChunk.trim());
+  }
+
+  return chunks;
+}
+
+export async function addDataFromWebsite(url) {
+  try {
+    const response = await fetch(url);
+    if (!response.ok) throw new Error(`Failed to fetch URL: ${url}`);
+
+    const html = await response.text();
+    const $ = cheerio.load(html);
+    let text = $('body').text().replace(/\s+/g, ' ').trim();
+
+    const chunks = splitTextIntoChunks(text);
+    let successCount = 0;
+    let errorCount = 0;
+
+    for (const chunk of chunks) {
+      try {
+        const embedding = await generateEmbedding(chunk);
+        const newEntry = { 
+          source: url, 
+          content: chunk, 
+          embedding: embedding,
+          title: $('title').text(),
+          section: '' // You could try to extract section information if available
+        };
+
+        qa_data.push(newEntry);
+        successCount++;
+        console.log(`Added new entry from website (${successCount}/${chunks.length})`);
+      } catch (embeddingError) {
+        errorCount++;
+        console.error(`Error generating embedding for chunk ${successCount + errorCount}/${chunks.length}:`, embeddingError);
+      }
+    }
+
+    if (errorCount > 0) {
+      console.warn(`Completed with ${errorCount} errors. ${successCount} entries were successfully added.`);
+    } else {
+      console.log(`All ${successCount} entries were successfully added from the website.`);
+    }
+  } catch (error) {
+    console.error('Error processing website:', error);
+    throw error; // Re-throw the error to be caught by the caller
+  }
+}
+
+
+
+export async function addDataFromJSON(jsonPath) {
+  try {
+    const jsonData = await fs.readFile(jsonPath, "utf8");
+
+    let data;
+    try {
+      data = JSON.parse(jsonData);
+    } catch (parseError) {
+      throw new Error(`JSON parsing failed: ${parseError.message}`);
+    }
+
+    if (!Array.isArray(data)) {
+      throw new Error("JSON data is not an array.");
+    }
+
+    let successCount = 0;
+    for (const entry of data) {
+      try {
+        const embedding = await generateEmbedding(entry.content);
+        entry.embedding = embedding;
+        qa_data.push(entry);
+        successCount++;
+        console.log(`Successfully added entry (${successCount}/${data.length})`);
+      } catch (embeddingError) {
+        console.error(`Error generating embedding for entry ${successCount + 1}:`, embeddingError);
+      }
+    }
+
+    console.log(`Added ${successCount} entries from JSON file.`);
+  } catch (error) {
+    console.error(`Error processing JSON file: ${error.message}`);
+    throw error;
+  }
+}
+
+
+// Example usage
+(async () => {
+  try {
+    await addDataFromJSON('src/data/data.json');
+    await addDataFromWebsite('https://th.m.wikipedia.org/wiki/%E0%B8%99%E0%B8%B2%E0%B8%A2%E0%B8%81%E0%B8%A3%E0%B8%B1%E0%B8%90%E0%B8%A1%E0%B8%99%E0%B8%95%E0%B8%A3%E0%B8%B5%E0%B9%84%E0%B8%97%E0%B8%A2');
+    await addDataFromWebsite('https://th.m.wikipedia.org/wiki/%E0%B8%A3%E0%B8%B2%E0%B8%A2%E0%B8%8A%E0%B8%B7%E0%B9%88%E0%B8%AD%E0%B8%95%E0%B8%AD%E0%B8%99%E0%B9%83%E0%B8%99%E0%B8%A2%E0%B8%AD%E0%B8%94%E0%B8%99%E0%B8%B1%E0%B8%81%E0%B8%AA%E0%B8%B7%E0%B8%9A%E0%B8%88%E0%B8%B4%E0%B9%8B%E0%B8%A7%E0%B9%82%E0%B8%84%E0%B8%99%E0%B8%B1%E0%B8%99_(%E0%B9%81%E0%B8%AD%E0%B8%99%E0%B8%B4%E0%B9%80%E0%B8%A1%E0%B8%8A%E0%B8%B1%E0%B8%99)');
+    console.log("All data added successfully");
+  } catch (error) {
+    console.error("Error in main execution:", error.message);
+  }
+})();
+
+
