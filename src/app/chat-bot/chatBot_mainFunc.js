@@ -5,9 +5,8 @@ import fetch from 'node-fetch';
 import * as cheerio from "cheerio";
 import { dataset } from '../../data/dataset';
 import { qa_data } from '../../data/qa_data';
-
-let qa_data_local = [];
-let dataset_local = [];
+import path from 'path'
+import pdfParse from 'pdf-parse';
 
 export async function loadData() {
   try {
@@ -74,7 +73,7 @@ async function semanticSearch(queryEmbedding, data, topN) {
 async function generateAnswer(query, context) {
   const messages = [
     ...dataset,
-    { role: 'system', content: 'You are a helpful assistant. Use the following context to answer the user\'s question. If the answer is not in the context, use your general knowledge to provide a relevant answer. If you really don\'t have enough information, say "I don\'t have enough information to answer that question."' },
+    { role: 'system', content: 'คุณคือคนที่จะช่วยในการตอบปัญหาและให้คำปรึกษาเกี่ยวกับข้อมูลโรคติดต่อทางเพศสัมพันธ์' },
     { role: 'user', content: `Context: ${context}\n\nQuestion: ${query}` }
   ];
   
@@ -92,7 +91,7 @@ export async function fetchGPTResponse(messages) {
       model: "gpt-4o",
       messages: messages,
       temperature: 0.7, // Add temperature for more varied responses
-      max_tokens: 300, // Limit response length
+      //max_tokens: 300, // Limit response length
     }),
   });
 
@@ -267,11 +266,49 @@ export async function addDataFromJSONL(jsonlPath) {
   }
 }
 
+// ฟังก์ชันสำหรับเพิ่มข้อมูลจาก PDF
+export async function addDataFromPDF(pdfPath) {
+  try {
+    const pdfBuffer = await fs.readFile(pdfPath); // อ่านไฟล์ PDF
+    const pdfData = await pdfParse(pdfBuffer); // ดึงข้อมูลจาก PDF
+    const text = pdfData.text.replace(/\s+/g, ' ').trim(); // ทำความสะอาดข้อความ
+
+    // แยกข้อความเป็น chunks
+    const chunks = splitTextIntoChunks(text);
+    let successCount = 0;
+    let errorCount = 0;
+
+    for (const chunk of chunks) {
+      try {
+        const embedding = await generateEmbedding(chunk); // สร้าง embedding สำหรับ chunk
+        const newEntry = {
+          source: path.basename(pdfPath), // ใช้ชื่อไฟล์ PDF เป็นแหล่งที่มา
+          content: chunk,
+          embedding: embedding,
+        };
+
+        qa_data.push(newEntry); // เพิ่ม entry ลงใน qa_data
+        successCount++;
+        console.log(`Successfully added entry (${successCount}/${chunks.length})`);
+      } catch (error) {
+        errorCount++;
+        console.error(`Error generating embedding for chunk (${successCount + errorCount}/${chunks.length}):`, error);
+      }
+    }
+
+    console.log(`Added ${successCount} entries from PDF. Errors: ${errorCount}`);
+  } catch (error) {
+    console.error(`Error processing PDF file (${pdfPath}):`, error.message);
+    throw error;
+  }
+}
+
 // Example usage
 (async () => {
   try {
     //await addDataFromJSONL('src/data/test.jsonl');
-    await addDataFromJSON('src/data/test.json');
+    //await addDataFromJSON(path.join(process.cwd(), 'src', 'data', 'test.json'));
+    //await addDataFromPDF(path.join(process.cwd(), 'src', 'data', 'test.pdf'));
     //await addDataFromWebsite('https://th.m.wikipedia.org/wiki/%E0%B8%99%E0%B8%B2%E0%B8%A2%E0%B8%81%E0%B8%A3%E0%B8%B1%E0%B8%90%E0%B8%A1%E0%B8%99%E0%B8%95%E0%B8%A3%E0%B8%B5%E0%B9%84%E0%B8%97%E0%B8%A2');
     //await addDataFromWebsite('https://th.m.wikipedia.org/wiki/%E0%B8%A3%E0%B8%B2%E0%B8%A2%E0%B8%8A%E0%B8%B7%E0%B9%88%E0%B8%AD%E0%B8%95%E0%B8%AD%E0%B8%99%E0%B9%83%E0%B8%99%E0%B8%A2%E0%B8%AD%E0%B8%94%E0%B8%99%E0%B8%B1%E0%B8%81%E0%B8%AA%E0%B8%B7%E0%B8%9A%E0%B8%88%E0%B8%B4%E0%B9%8B%E0%B8%A7%E0%B9%82%E0%B8%84%E0%B8%99%E0%B8%B1%E0%B8%99_(%E0%B9%81%E0%B8%AD%E0%B8%99%E0%B8%B4%E0%B9%80%E0%B8%A1%E0%B8%8A%E0%B8%B1%E0%B8%99)');
     console.log("All data added successfully");
