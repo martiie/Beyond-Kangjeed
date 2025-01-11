@@ -75,7 +75,7 @@ export async function findSimilar(query) {
     validSimilarities.sort((a, b) => b.similarityScore - a.similarityScore);
 
     // แสดงผลลัพธ์ของข้อมูลที่คล้ายที่สุด
-    const topSimilar = validSimilarities.slice(0, 5);
+    const topSimilar = validSimilarities.slice(0, 3);
     console.log('Top similar entries:', topSimilar);
 
     // รวมข้อมูลที่คล้ายที่สุดมาเป็น context
@@ -98,7 +98,7 @@ export async function findSimilar(query) {
 
     // จัดเรียง chunk ตาม similarity score และเลือก top 10
     chunkSimilarities.sort((a, b) => b.similarityScore - a.similarityScore);
-    const topChunks = chunkSimilarities.slice(0, 20).map(item => item.chunk);
+    const topChunks = chunkSimilarities.slice(0, 10).map(item => item.chunk);
     console.log('Top chunks:', topChunks);
 
     // สร้างคำตอบจาก top 10 chunks
