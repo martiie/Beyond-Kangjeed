@@ -3,54 +3,108 @@
 import fs from 'fs/promises';
 import fetch from 'node-fetch';
 import * as cheerio from "cheerio";
-import { dataset } from '../../data/dataset';
-import { qa_data } from '../../data/qa_data';
+import { prompt } from '../../data/prompt';
+import { dataset } from '../../data/knowledge';
 import path from 'path'
 import pdfParse from 'pdf-parse';
+// import abc from '../../data/test.json' assert { type: 'json' };
+import Wordcut from "wordcut";
+
+Wordcut.init();
+
+// ฟังก์ชันสำหรับ chunk ข้อมูล
+function chunkData(content, maxTokens = 500) {
+  let tokens = Wordcut.cut(content).split(' '); // แบ่งคำโดยใช้ wordcut สำหรับภาษาไทย
+  let chunks = [];
+
+  while (tokens.length > maxTokens) {
+    chunks.push(tokens.slice(0, maxTokens).join(' '));
+    tokens = tokens.slice(maxTokens);
+  }
+
+  if (tokens.length > 0) {
+    chunks.push(tokens.join(' '));
+  }
+  console.log(chunks);
+
+  return chunks;
+}
 
 export async function loadData() {
   try {
-    console.log('Loaded data:', qa_data);
-    qa_data.forEach(entry => {
+    // console.log('Loaded data:', dataset);
+    dataset.forEach(entry => {
       if (entry.embedding && !Array.isArray(entry.embedding)) {
         entry.embedding = Array.from(entry.embedding);
       }
     });
-    return qa_data;
+    return dataset;
   } catch (error) {
     console.error('Error loading data:', error);
-    throw new Error('Failed to load qa_data: ' + error.message);
+    throw new Error('Failed to load dataset: ' + error.message);
   }
 }
 
 export async function findSimilar(query) {
   try {
-    console.log('Processing query:', query);
+    // สร้าง embedding สำหรับ query
     const queryEmbedding = await generateEmbedding(query);
+    
+    // ดึงข้อมูลจาก dataset (รวมถึงข้อมูลที่ไม่มี embedding)
     const data = await loadData();
-
-    const topSimilarChunks = await semanticSearch(queryEmbedding, data, 20);
-    console.log('Top similar chunks:', topSimilarChunks);
-
-    // ตรวจสอบคะแนนของคำตอบที่คล้ายที่สุด
-    if (topSimilarChunks.length > 0 && topSimilarChunks[0].score >= 0.8) {
-      const bestMatch = topSimilarChunks[0].entry;
-      if (bestMatch.question && bestMatch.answer) {
-        console.log('High similarity found, using answer from qa_data:', bestMatch.answer);
-        return bestMatch.answer;
+    
+    // สร้าง embedding สำหรับ content ใน dataset หากยังไม่มี
+    for (let entry of data) {
+      if (!entry.embedding && entry.content) {
+        // สร้าง embedding สำหรับ content
+        entry.embedding = await generateEmbedding(entry.content);
       }
     }
 
-    // Combine similar chunks into a single context
-    const combinedContext = topSimilarChunks.map(chunk => chunk.entry.content || chunk.entry.answer).join('\n\n');
+    // คำนวณ cosine similarity ระหว่าง queryEmbedding กับ embedding ของทุก entry ใน dataset
+    const similarities = await Promise.all(data.map(async (entry) => {
+      if (entry.embedding) {
+        const similarityScore = await cosineSimilarity(queryEmbedding, entry.embedding);
+        return { ...entry, similarityScore }; // เพิ่ม similarityScore
+      }
+      return null;
+    }));
 
-    // Generate answer using the combined context
-    const answer = await generateAnswer(query, combinedContext);
+    // ลบ null ถ้าไม่มี embedding และจัดเรียง similarity score จากมากไปหาน้อย
+    const validSimilarities = similarities.filter(item => item !== null);
+    validSimilarities.sort((a, b) => b.similarityScore - a.similarityScore);
+
+    // แสดงผลลัพธ์ของข้อมูลที่คล้ายที่สุด
+    const topSimilar = validSimilarities.slice(0, 5);
+    console.log('Top similar entries:', topSimilar);
+
+    // รวมข้อมูลที่คล้ายที่สุดมาเป็น context
+    const combinedContext = topSimilar.map(entry => entry.content || entry.answer).join('\n\n');
+
+    // ซอย combinedContext ออกเป็น chunk ย่อย
+    const chunks = chunkText(combinedContext); // 200 คือจำนวนคำหรืออักขระต่อ chunk
+    console.log('Chunks:', chunks);
+
+    // สร้าง embedding สำหรับแต่ละ chunk
+    const chunkEmbeddings = await Promise.all(chunks.map(chunk => generateEmbedding(chunk)));
+
+    // คำนวณ cosine similarity ระหว่าง queryEmbedding กับ chunkEmbeddings
+    const chunkSimilarities = chunkEmbeddings.map((chunkEmbedding, index) => {
+      return {
+        chunk: chunks[index],
+        similarityScore: cosineSimilarity(queryEmbedding, chunkEmbedding),
+      };
+    });
+
+    // จัดเรียง chunk ตาม similarity score และเลือก top 10
+    chunkSimilarities.sort((a, b) => b.similarityScore - a.similarityScore);
+    const topChunks = chunkSimilarities.slice(0, 20).map(item => item.chunk);
+    console.log('Top chunks:', topChunks);
+
+    // สร้างคำตอบจาก top 10 chunks
+    const finalContext = topChunks.join('\n\n');
+    const answer = await generateAnswer(query, finalContext);
     console.log('Generated answer:', answer);
-
-    // Add query and answer to dataset
-    dataset.push({ role: 'user', content: query });
-    dataset.push({ role: 'assistant', content: answer });
 
     return answer;
   } catch (error) {
@@ -59,20 +113,33 @@ export async function findSimilar(query) {
   }
 }
 
-async function semanticSearch(queryEmbedding, data, topN) {
-  const similarities = await Promise.all(data.map(async (entry) => {
-    const score = await cosineSimilarity(queryEmbedding, entry.embedding);
-    return { entry, score };
-  }));
+// ฟังก์ชันสำหรับซอยข้อความออกเป็น chunk ย่อย
+function chunkText(text,numberChunk=30) {
+  const chunks = [];
+  const words = text.split(/\s+/); // แบ่งข้อความโดยใช้ช่องว่าง
+  const chunkSize = Math.ceil(words.length / numberChunk); // ขนาดของ chunk เป็น 1/20 ของจำนวนคำ
 
-  return similarities
-    .sort((a, b) => b.score - a.score)
-    .slice(0, topN);
+  let currentChunk = [];
+  
+  for (let word of words) {
+    if (currentChunk.length >= chunkSize) {
+      chunks.push(currentChunk.join(' '));
+      currentChunk = [];
+    }
+    currentChunk.push(word);
+  }
+
+  if (currentChunk.length > 0) {
+    chunks.push(currentChunk.join(' '));
+  }
+
+  return chunks;
 }
+
 
 async function generateAnswer(query, context) {
   const messages = [
-    ...dataset,
+    ...prompt,
     { role: 'system', content: 'คุณคือคนที่จะช่วยในการตอบปัญหาและให้คำปรึกษาเกี่ยวกับข้อมูลโรคติดต่อทางเพศสัมพันธ์' },
     { role: 'user', content: `Context: ${context}\n\nQuestion: ${query}` }
   ];
@@ -185,9 +252,13 @@ export async function addDataFromWebsite(url) {
           section: '' // You could try to extract section information if available
         };
 
-        qa_data.push(newEntry);
+        dataset.push(newEntry);
         successCount++;
         console.log(`Added new entry from website (${successCount}/${chunks.length})`);
+        if (successCount==7) {
+          console.log("example data embeding from web:");
+          console.log(newEntry);
+        };
       } catch (embeddingError) {
         errorCount++;
         console.error(`Error generating embedding for chunk ${successCount + errorCount}/${chunks.length}:`, embeddingError);
@@ -205,13 +276,13 @@ export async function addDataFromWebsite(url) {
   }
 }
 
-export async function addDataFromJSON(jsonPath) {
+export async function addDataFromJSON(dt) {
   try {
-    const jsonData = await fs.readFile(jsonPath, "utf8");
+    // const jsonData = await fs.readFile(jsonPath, "utf8");
 
     let data;
     try {
-      data = JSON.parse(jsonData);
+      data = dt;
     } catch (parseError) {
       throw new Error(`JSON parsing failed: ${parseError.message}`);
     }
@@ -225,7 +296,7 @@ export async function addDataFromJSON(jsonPath) {
       try {
         const embedding = await generateEmbedding(entry.content);
         entry.embedding = embedding;
-        qa_data.push(entry);
+        dataset.push(entry);
         successCount++;
         console.log(`Successfully added entry (${successCount}/${data.length})`);
       } catch (embeddingError) {
@@ -251,7 +322,7 @@ export async function addDataFromJSONL(jsonlPath) {
         const entry = JSON.parse(line); // แปลงแต่ละบรรทัดเป็น JSON Object
         const embedding = await generateEmbedding(entry.content);
         entry.embedding = embedding; // เพิ่ม embedding ลงใน entry
-        qa_data.push(entry); // เพิ่ม entry ลงใน qa_data
+        dataset.push(entry); // เพิ่ม entry ลงใน dataset
         successCount++;
         console.log(`Successfully added entry (${successCount}/${lines.length})`);
       } catch (error) {
@@ -287,7 +358,7 @@ export async function addDataFromPDF(pdfPath) {
           embedding: embedding,
         };
 
-        qa_data.push(newEntry); // เพิ่ม entry ลงใน qa_data
+        dataset.push(newEntry); // เพิ่ม entry ลงใน dataset
         successCount++;
         console.log(`Successfully added entry (${successCount}/${chunks.length})`);
       } catch (error) {
@@ -307,10 +378,13 @@ export async function addDataFromPDF(pdfPath) {
 (async () => {
   try {
     //await addDataFromJSONL('src/data/test.jsonl');
-    //await addDataFromJSON(path.join(process.cwd(), 'src', 'data', 'test.json'));
+    // await addDataFromJSON(abc);
     //await addDataFromPDF(path.join(process.cwd(), 'src', 'data', 'test.pdf'));
-    //await addDataFromWebsite('https://th.m.wikipedia.org/wiki/%E0%B8%99%E0%B8%B2%E0%B8%A2%E0%B8%81%E0%B8%A3%E0%B8%B1%E0%B8%90%E0%B8%A1%E0%B8%99%E0%B8%95%E0%B8%A3%E0%B8%B5%E0%B9%84%E0%B8%97%E0%B8%A2');
-    //await addDataFromWebsite('https://th.m.wikipedia.org/wiki/%E0%B8%A3%E0%B8%B2%E0%B8%A2%E0%B8%8A%E0%B8%B7%E0%B9%88%E0%B8%AD%E0%B8%95%E0%B8%AD%E0%B8%99%E0%B9%83%E0%B8%99%E0%B8%A2%E0%B8%AD%E0%B8%94%E0%B8%99%E0%B8%B1%E0%B8%81%E0%B8%AA%E0%B8%B7%E0%B8%9A%E0%B8%88%E0%B8%B4%E0%B9%8B%E0%B8%A7%E0%B9%82%E0%B8%84%E0%B8%99%E0%B8%B1%E0%B8%99_(%E0%B9%81%E0%B8%AD%E0%B8%99%E0%B8%B4%E0%B9%80%E0%B8%A1%E0%B8%8A%E0%B8%B1%E0%B8%99)');
+    // await addDataFromWebsite('https://th.m.wikipedia.org/wiki/%E0%B8%99%E0%B8%B2%E0%B8%A2%E0%B8%81%E0%B8%A3%E0%B8%B1%E0%B8%90%E0%B8%A1%E0%B8%99%E0%B8%95%E0%B8%A3%E0%B8%B5%E0%B9%84%E0%B8%97%E0%B8%A2');
+    // await addDataFromWebsite('https://th.m.wikipedia.org/wiki/%E0%B8%A3%E0%B8%B2%E0%B8%A2%E0%B8%8A%E0%B8%B7%E0%B9%88%E0%B8%AD%E0%B8%95%E0%B8%AD%E0%B8%99%E0%B9%83%E0%B8%99%E0%B8%A2%E0%B8%AD%E0%B8%94%E0%B8%99%E0%B8%B1%E0%B8%81%E0%B8%AA%E0%B8%B7%E0%B8%9A%E0%B8%88%E0%B8%B4%E0%B9%8B%E0%B8%A7%E0%B9%82%E0%B8%84%E0%B8%99%E0%B8%B1%E0%B8%99_(%E0%B9%81%E0%B8%AD%E0%B8%99%E0%B8%B4%E0%B9%80%E0%B8%A1%E0%B8%8A%E0%B8%B1%E0%B8%99)');
+    const query = "คุณคือผู้ช่วยคำนวณความเสี่ยงติดเชื้อ";
+    const answer = await chunkData(query,100);
+    console.log("Answer:", answer);
     console.log("All data added successfully");
   } catch (error) {
     console.error("Error in main execution:", error.message);

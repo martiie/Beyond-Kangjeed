@@ -8,7 +8,7 @@ import ChatBot from '../components/chatBot'; // นำเข้า ChatBot Compo
 
 const HomePage = () => {
   const [isOpenChat, setIsOpenChat] = useState(false); // State สำหรับควบคุมการแสดงผลของ ChatBot
-  console.log('Process.cwd():', process.cwd());
+  // console.log('Process.cwd():', process.cwd());
 
   return (
     <div className={styles.container} style={{

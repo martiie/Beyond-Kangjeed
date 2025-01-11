@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { findSimilar } from '../app/chat-bot/chatBot_mainFunc';
+// import { chunkData } from '../app/chat-bot/abc';
 
 export default function ChatBot({ isOpenChat, setIsOpenChat }) {
   const [messages, setMessages] = useState([]);
