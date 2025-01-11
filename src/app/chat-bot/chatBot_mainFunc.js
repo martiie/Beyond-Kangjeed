@@ -6,7 +6,7 @@ import * as cheerio from "cheerio";
 import { prompt } from '../../data/prompt';
 import { dataset } from '../../data/knowledge';
 import path from 'path'
-import pdfParse from 'pdf-parse';
+// import pdfParse from 'pdf-parse';
 // import abc from '../../data/test.json' assert { type: 'json' };
 import Wordcut from "wordcut";
 
