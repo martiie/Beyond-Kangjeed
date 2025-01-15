@@ -35,7 +35,7 @@ const Navbar = () => {
   return (
     <>
       <nav className={`${styles.nav}`}>
-        <h1 className={`${styles.navTitle} ${pacifico.className}`}>Love Foundation</h1>
+        <h1 className={`${styles.navTitle} ${pacifico.className} cursor-pointer`}>Love Foundation</h1>
         <div className={styles.desktopMenu}>
           <Link href="#" className={styles.navLink}>เกี่ยวกับเรา</Link>
           <Link href="#" className={styles.navLink}>ข่าวสาร</Link>

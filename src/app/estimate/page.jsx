@@ -39,23 +39,14 @@ export default function EstimatePage() {
         data.std_infection_hiv_positive_partner
       );
       setCalculatedRisk(risk);
-      console.log('Calculated Risk:', risk);
+      console.log('Calculated Risk:', risk, calRiskData[0]);
     }
   }, [calRiskData]);
 
   return (
     <div className="container mx-auto px-4 py-8 relative">
-      <RiskMeter calculatedRisk={calculatedRisk} />
+      <RiskMeter calculatedRisk={calculatedRisk} riskData={calRiskData} />
       <RiskEstimationBox onCalRiskDataChange={handleCalRiskDataChange} />
-      <button
-        className="fixed right-8 bottom-8 w-[5.2rem] h-[5.2rem] bg-green-600 text-white font-semibold rounded-full shadow-md hover:bg-green-700 transition duration-200 flex items-center justify-center"
-        onClick={calculateRisk}
-        aria-label="Calculate Risk"
-      >
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-        </svg>
-      </button>
     </div>
   )
 }
