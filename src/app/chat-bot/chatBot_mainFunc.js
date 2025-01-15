@@ -39,6 +39,9 @@ export async function findSimilar(query) {
     const contextString = topSimilar.map(item => item.content).join('\n');
     const answer = await generateAnswer(query, contextString);
     // console.log('Generated answer:', answer);
+    // เก็บคำตอบ user
+    prompt.push({ role: 'user', content: query });
+    prompt.push({ role: 'assistant', content: answer });
 
     return answer;
   } catch (error) {
