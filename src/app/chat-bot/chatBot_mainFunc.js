@@ -4,44 +4,66 @@ import fetch from 'node-fetch';
 import { prompt } from '../../data/prompt';
 import dataset from '../../data/knowledge.json';
 
+// ค้นหาด้วย BM25 (keyword search) ไม่ต้องใช้ embedding/API key
+const segmenter = new Intl.Segmenter('th', { granularity: 'word' });
+const BM25_K1 = 1.5;
+const BM25_B = 0.75;
+
+// คำที่ความหมายเดียวกัน ให้นับเป็น token เดียวกัน
+const SYNONYMS = { 'เอชไอวี': 'hiv', 'เอดส์': 'aids', 'เพร็พ': 'prep', 'เป๊ป': 'pep' };
+// คำลงท้ายคำถาม ไม่ช่วยในการค้นหา
+const STOPWORDS = new Set(['ไหม', 'มั้ย', 'มั๊ย', 'อะไร', 'คือ', 'ยังไง', 'อย่างไร', 'ไง', 'บ้าง', 'ครับ', 'ค่ะ', 'คะ', 'นะ', 'หรือ', 'หรือเปล่า', 'เปล่า']);
+
+function tokenize(text) {
+  return [...segmenter.segment(text.toLowerCase())]
+    .filter(s => s.isWordLike)
+    .map(s => SYNONYMS[s.segment] || s.segment)
+    .filter(t => !STOPWORDS.has(t));
+}
+
+// สร้าง index ครั้งเดียวตอนโหลด module
+const docs = dataset
+  .filter(entry => entry.content)
+  .map(entry => {
+    const tokens = tokenize(entry.content);
+    const tf = new Map();
+    for (const t of tokens) tf.set(t, (tf.get(t) || 0) + 1);
+    return { content: entry.content, tf, length: tokens.length };
+  });
+const avgDocLength = docs.reduce((sum, d) => sum + d.length, 0) / docs.length;
+const docFreq = new Map();
+for (const d of docs) {
+  for (const t of d.tf.keys()) docFreq.set(t, (docFreq.get(t) || 0) + 1);
+}
+
+function bm25Search(query, topK) {
+  const queryTokens = [...new Set(tokenize(query))];
+  return docs
+    .map(d => {
+      let score = 0;
+      for (const t of queryTokens) {
+        const f = d.tf.get(t);
+        if (!f) continue;
+        const n = docFreq.get(t);
+        const idf = Math.log(1 + (docs.length - n + 0.5) / (n + 0.5));
+        score += idf * (f * (BM25_K1 + 1)) / (f + BM25_K1 * (1 - BM25_B + BM25_B * d.length / avgDocLength));
+      }
+      return { content: d.content, score };
+    })
+    .filter(d => d.score > 0)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, topK);
+}
+
 export async function findSimilar(query) {
   try {
-    // สร้าง embedding สำหรับ query
-    const queryEmbedding = await generateEmbedding(query);
-    
-    // ดึงข้อมูลจาก dataset (รวมถึงข้อมูลที่ไม่มี embedding)
-    const data = dataset;
-    
-    // สร้าง embedding สำหรับ content ใน dataset หากยังไม่มี
-    for (let entry of data) {
-      if (!entry.embedding && entry.content) {
-        // สร้าง embedding สำหรับ content
-        entry.embedding = await generateEmbedding(entry.content);
-      }
-    }
-
-    // คำนวณ cosine similarity ระหว่าง queryEmbedding กับ embedding ของทุก entry ใน dataset
-    const similarities = await Promise.all(data.map(async (entry) => {
-      if (entry.embedding) {
-        const similarityScore = await cosineSimilarity(queryEmbedding, entry.embedding);
-        return { ...entry, similarityScore }; // เพิ่ม similarityScore
-      }
-      return null;
-    }));
-
-    // ลบ null ถ้าไม่มี embedding และจัดเรียง similarity score จากมากไปหาน้อย
-    const validSimilarities = similarities.filter(item => item !== null);
-    validSimilarities.sort((a, b) => b.similarityScore - a.similarityScore);
-
-    // แสดงผลลัพธ์ของข้อมูลที่คล้ายที่สุด
-    const topSimilar = validSimilarities.slice(0, 10);
+    // ดึงข้อมูลที่เกี่ยวข้องที่สุดจาก knowledge.json
+    const topSimilar = bm25Search(query, 10);
     // console.log('Top similar entries:', topSimilar);
     const contextString = topSimilar.map(item => item.content).join('\n');
     const answer = await generateAnswer(query, contextString);
     // console.log('Generated answer:', answer);
-    // เก็บคำตอบ user
-    prompt.push({ role: 'user', content: query });
-    prompt.push({ role: 'assistant', content: answer });
+    // ไม่เก็บประวัติลง prompt (global ของ server) เพราะจะปนกันข้ามผู้ใช้และ context ยาวขึ้นเรื่อยๆ
 
     return answer;
   } catch (error) {
@@ -53,70 +75,43 @@ export async function findSimilar(query) {
 async function generateAnswer(query, context) {
   const messages = [
     ...prompt,
-    { role: 'assistant', content: context },
+    { role: 'system', content: `ข้อมูลอ้างอิงสำหรับตอบคำถาม:\n${context}` },
     { role: 'user', content: query }
   ];
-  
+
   return await fetchGPTResponse(messages);
 }
 
 export async function fetchGPTResponse(messages) {
-  const response = await fetch("https://api.openai.com/v1/chat/completions", {
+  const response = await fetch("http://thaillm.or.th/api/v1/chat/completions", {
     method: "POST",
     headers: {
-      "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`,
+      "Authorization": `Bearer ${process.env.THAILLM_API_KEY}`,
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      model: "gpt-4o",
+      model: "openthaigpt-thaillm-8b-instruct-v7.2",
       messages: messages,
-      temperature: 0.7, // Add temperature for more varied responses
-      //max_tokens: 300, // Limit response length
+      max_tokens: 2048,
+      temperature: 0.3,
     }),
   });
 
-  const responseBody = await response.json();
+  // ThaiLLM อาจตอบ error เป็น HTML ไม่ใช่ JSON
+  const text = await response.text();
+  let responseBody;
+  try {
+    responseBody = JSON.parse(text);
+  } catch {
+    console.error('ThaiLLM API Error:', response.status, text.slice(0, 200));
+    throw new Error(`ThaiLLM API error (HTTP ${response.status})`);
+  }
   if (!response.ok) {
-    console.error('OpenAI API Error:', responseBody);
+    console.error('ThaiLLM API Error:', responseBody);
     throw new Error(responseBody.error?.message || 'Failed to fetch response');
   }
 
-  return responseBody.choices[0].message.content;
+  // โมเดลส่ง <think>...</think> มาก่อนคำตอบจริง ตัดออก
+  const content = responseBody.choices[0].message.content || '';
+  return content.replace(/<think>[\s\S]*?(<\/think>|$)/g, '').trim();
 }
-
-export async function generateEmbedding(text) {
-  try {
-    const response = await fetch("https://api.openai.com/v1/embeddings", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "text-embedding-3-small",
-        input: text,
-      }),
-    });
-
-    const responseBody = await response.json();
-    if (!response.ok) {
-      console.error('OpenAI API Error:', responseBody);
-      throw new Error(responseBody.error?.message || 'Failed to generate embedding');
-    }
-
-    console.log('Generated Embedding:', responseBody.data[0].embedding);
-    return responseBody.data[0].embedding;
-  } catch (error) {
-    console.error('Error generating embedding:', error);
-    throw new Error('Failed to generate embedding: ' + error.message);
-  }
-}
-
-export async function cosineSimilarity(vecA, vecB) {
-  const dotProduct = vecA.reduce((sum, a, idx) => sum + a * vecB[idx], 0);
-  const magnitudeA = Math.sqrt(vecA.reduce((sum, a) => sum + a * a, 0));
-  const magnitudeB = Math.sqrt(vecB.reduce((sum, b) => sum + b * b, 0));
-
-  return magnitudeA && magnitudeB ? dotProduct / (magnitudeA * magnitudeB) : 0;
-}
-
