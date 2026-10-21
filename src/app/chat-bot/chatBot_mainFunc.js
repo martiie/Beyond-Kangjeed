@@ -4,7 +4,7 @@ import fetch from 'node-fetch';
 import { prompt } from '../../data/prompt';
 import dataset from '../../data/knowledge.json';
 
-// ค้นหาด้วย BM25 (keyword search) ไม่ต้องใช้ embedding/API key
+// ค้นหาด้วย BM25 (keyword search)
 const segmenter = new Intl.Segmenter('th', { granularity: 'word' });
 const BM25_K1 = 1.5;
 const BM25_B = 0.75;
